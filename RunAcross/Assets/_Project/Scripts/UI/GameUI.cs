@@ -13,7 +13,9 @@ namespace RunAcross.UI
         public GameFlow flow;
         public float toastSeconds = 2.4f;
 
-        VisualElement _hud, _menu, _pause, _complete, _settings, _controls;
+        VisualElement _hud, _menu, _pause, _complete, _settings, _controls, _levels, _levelList;
+        Button _next;
+        Label _completeLevel;
         VisualElement _subReturn; // which screen Settings/Controls go back to
         Label _objective, _objectiveCount, _timer, _toast, _best, _completeTime, _completeBest, _qualityNote;
         Button _qLow, _qMed, _qHigh;
@@ -35,6 +37,9 @@ namespace RunAcross.UI
             _complete = root.Q("complete");
             _settings = root.Q("settings");
             _controls = root.Q("controls");
+            _levels = root.Q("levels");
+            _levelList = root.Q("level-list");
+            _completeLevel = root.Q<Label>("complete-level");
             _objective = root.Q<Label>("objective-text");
             _objectiveCount = root.Q<Label>("objective-count");
             _timer = root.Q<Label>("timer");
@@ -44,7 +49,8 @@ namespace RunAcross.UI
             _completeBest = root.Q<Label>("complete-best");
             _qualityNote = root.Q<Label>("quality-note");
 
-            Wire(root, "btn-play", () => flow.StartRun());
+            Wire(root, "btn-play", () => { BuildLevelList(); OpenSub(_levels, _menu); });
+            Wire(root, "btn-levels-back", () => CloseSubPanel());
             Wire(root, "btn-settings", () => OpenSub(_settings, _menu));
             Wire(root, "btn-controls", () => OpenSub(_controls, _menu));
             Wire(root, "btn-exit", () => flow.QuitGame());
@@ -57,6 +63,7 @@ namespace RunAcross.UI
             Wire(root, "btn-pause-exit", () => flow.QuitGame());
 
             Wire(root, "btn-again", () => flow.Restart());
+            _next = Wire(root, "btn-next", () => flow.NextLevel());
             Wire(root, "btn-complete-menu", () => flow.QuitToMenu());
 
             Wire(root, "btn-settings-back", () => CloseSubPanel());
@@ -91,8 +98,8 @@ namespace RunAcross.UI
         public void ShowMainMenu()
         {
             Bind();
-            float best = GameSettings.BestTime;
-            _best.text = best > 0f ? "BEST  " + FormatTime(best) : "";
+            int cleared = Levels.Cleared();
+            _best.text = cleared > 0 ? $"LEVELS CLEARED  {cleared} / {Levels.Count}" : "";
             Show(_menu);
             Focus(_menu);
         }
@@ -101,8 +108,11 @@ namespace RunAcross.UI
 
         public void ShowPause() { Show(_pause); Focus(_pause); }
 
-        public void ShowComplete(float time, float best, bool record)
+        public void ShowComplete(string level, float time, float best, bool record, bool hasNext)
         {
+            _completeLevel.text = level;
+            _next.style.display = hasNext ? DisplayStyle.Flex : DisplayStyle.None;
+            _next.text = hasNext ? "NEXT  ·  " + Levels.All[flow.levelIndex + 1].title.ToUpperInvariant() : "";
             _completeTime.text = FormatTime(time);
             _completeBest.text = record ? "NEW BEST" : "BEST  " + FormatTime(best);
             Show(_complete);
@@ -129,9 +139,9 @@ namespace RunAcross.UI
 
         void Show(VisualElement screen)
         {
-            foreach (var s in new[] { _hud, _menu, _pause, _complete, _settings, _controls })
+            foreach (var s in new[] { _hud, _menu, _pause, _complete, _settings, _controls, _levels })
                 s.style.display = s == screen ? DisplayStyle.Flex : DisplayStyle.None;
-            if (screen != _settings && screen != _controls) _subReturn = null;
+            if (screen != _settings && screen != _controls && screen != _levels) _subReturn = null;
         }
 
         static void Focus(VisualElement screen) => screen.Q<Button>()?.Focus();
@@ -140,11 +150,12 @@ namespace RunAcross.UI
 
         public void SetTimer(float seconds) { if (_timer != null) _timer.text = FormatTime(seconds); }
 
-        public void SetObjective(string text, int hit, int total)
+        public void SetObjective(string text, int hit, int total, float timeLeft = -1f)
         {
             Bind();
             _objective.text = text;
             _objectiveCount.text = total > 0 ? $"TARGETS  {hit} / {total}" : "";
+            if (timeLeft >= 0f) _objectiveCount.text += $"   ·   {timeLeft:0.0}s LEFT";
             _objectiveCount.style.display = total > 0 ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
@@ -160,6 +171,32 @@ namespace RunAcross.UI
         {
             int m = (int)(s / 60f);
             return $"{m:00}:{s - m * 60f:00.00}";
+        }
+
+        void BuildLevelList()
+        {
+            _levelList.Clear();
+            for (int i = 0; i < Levels.Count; i++)
+            {
+                int index = i;
+                bool unlocked = Levels.IsUnlocked(i);
+                var b = new Button(() => { GameAudio.Play(Sfx.UiClick, 0.6f); flow.PlayLevel(index); });
+                b.AddToClassList("menu-button");
+                b.AddToClassList("level-button");
+                if (i == 0) b.AddToClassList("menu-button--primary");
+                b.Add(new Label(Levels.Label(i)));
+                float best = Levels.BestTime(i);
+                var right = new Label(!unlocked ? "LOCKED" : best > 0f ? "BEST  " + FormatTime(best) : "NEW");
+                right.AddToClassList("level-best");
+                b.Add(right);
+                b.text = "";
+                b.SetEnabled(unlocked);
+                b.RegisterCallback<PointerEnterEvent>(_ => GameAudio.Play(Sfx.UiHover, 0.35f));
+                _levelList.Add(b);
+            }
+            // focus the newest unlocked level
+            for (int i = Levels.Count - 1; i >= 0; i--)
+                if (Levels.IsUnlocked(i)) { ((Button)_levelList[i]).Focus(); break; }
         }
 
         // ---------------------------------------------------------------- settings

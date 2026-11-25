@@ -24,6 +24,8 @@ namespace RunAcross.Core
         public Transform playerStart;
         public GameUI ui;
         public GraphicsApplier graphics;
+        [Tooltip("Index into Levels.All.")]
+        public int levelIndex;
         [Tooltip("In course order; the first one still closed sets the HUD objective.")]
         public PathOpener[] path;
         public float blendSeconds = 1.6f;
@@ -37,6 +39,9 @@ namespace RunAcross.Core
         CinemachineOrbitalFollow _orbit;
         float _startDelay;
         float[] _baseGains;
+        PathOpener _timed;
+
+        void OnCheckpoint(Checkpoint _) => ui.Toast("Checkpoint");
 
         void Awake()
         {
@@ -49,8 +54,9 @@ namespace RunAcross.Core
             {
                 p.Progressed += _ => RefreshObjective();
                 p.Opened += o => { ui.Toast(o.openedMessage); RefreshObjective(); };
+                p.TimedOut += _ => ui.Toast("Too slow. Targets reset");
             }
-            Checkpoint.Reached += _ => ui.Toast("Checkpoint");
+            Checkpoint.Reached += OnCheckpoint;
             GoalZone.Reached += Complete;
             player.Respawned += () => ui.Toast("Respawned at checkpoint");
             GameSettings.Changed += ApplyLookSettings;
@@ -59,6 +65,8 @@ namespace RunAcross.Core
         void OnDestroy()
         {
             GameSettings.Changed -= ApplyLookSettings;
+            Checkpoint.Reached -= OnCheckpoint; // static events outlive the scene
+            GoalZone.Reached -= Complete;
             if (Instance == this) Instance = null;
         }
 
@@ -84,6 +92,7 @@ namespace RunAcross.Core
                 case GameState.Playing:
                     RunTime += Time.deltaTime;
                     ui.SetTimer(RunTime);
+                    if (_timed != null) RefreshObjective(); // keep the challenge countdown ticking
                     if (back) Pause();
                     break;
                 case GameState.Paused:
@@ -138,7 +147,7 @@ namespace RunAcross.Core
         {
             State = GameState.Playing;
             SetControl(true);
-            ui.Toast(path.Length > 0 ? path[0].objective : "Reach the beacon");
+            ui.Toast(Levels.Label(levelIndex));
         }
 
         public void Pause()
@@ -170,25 +179,37 @@ namespace RunAcross.Core
                 _orbit.HorizontalAxis.Value = Mathf.Repeat(player.transform.eulerAngles.y + 180f + 180f, 360f) - 180f;
                 _orbit.VerticalAxis.Value = 8f;
             }
-            float best = GameSettings.BestTime;
+            float best = Levels.BestTime(levelIndex);
             bool record = best <= 0f || RunTime < best;
-            if (record) GameSettings.BestTime = RunTime;
+            if (record) Levels.SetBestTime(levelIndex, RunTime);
+            bool hasNext = levelIndex + 1 < Levels.Count;
+            if (hasNext) Levels.Unlock(levelIndex + 1);
             Audio.GameAudio.Play(Audio.Sfx.Complete);
-            ui.ShowComplete(RunTime, record ? RunTime : best, record);
+            ui.ShowComplete(Levels.Label(levelIndex), RunTime, record ? RunTime : best, record, hasNext);
         }
 
-        public void Restart()
+        public void Restart() => Reload();
+
+        /// <summary>The main menu lives in Level 01's scene.</summary>
+        public void QuitToMenu() => Load(Levels.All[0].scene, skipMenu: false);
+
+        void Reload() => Load(SceneManager.GetActiveScene().name, skipMenu: true);
+
+        /// <summary>From the level select or the finish screen.</summary>
+        public void PlayLevel(int index)
         {
-            _skipMenuOnLoad = true;
-            Reload();
+            if (!Levels.IsUnlocked(index)) return;
+            if (index == levelIndex && State == GameState.Menu) StartRun();
+            else Load(Levels.All[index].scene, skipMenu: true);
         }
 
-        public void QuitToMenu() => Reload();
+        public void NextLevel() => PlayLevel(levelIndex + 1);
 
-        void Reload()
+        void Load(string scene, bool skipMenu)
         {
+            _skipMenuOnLoad = skipMenu;
             Time.timeScale = 1f;
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            SceneManager.LoadScene(scene);
         }
 
         public void QuitGame()
@@ -212,10 +233,13 @@ namespace RunAcross.Core
 
         void RefreshObjective()
         {
+            _timed = null;
             foreach (var p in path)
             {
                 if (p.IsOpen) continue;
-                ui.SetObjective(p.objective, p.HitCount, p.TargetCount);
+                float left = p.TimeRemaining;
+                if (left >= 0f) _timed = p;
+                ui.SetObjective(p.objective, p.HitCount, p.TargetCount, left);
                 return;
             }
             ui.SetObjective("Reach the beacon at the end of the course", 0, 0);

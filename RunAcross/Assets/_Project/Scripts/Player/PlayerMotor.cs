@@ -38,6 +38,7 @@ namespace RunAcross.Player
         Quaternion _checkpointRotation;
         float _verticalVelocity, _lastGroundedTime = -1f, _lastJumpPressTime = -1f;
         bool _wasGrounded = true;
+        Gameplay.MovingPlatform _ground;
         Quaternion? _faceOverride;
         float _faceOverrideUntil;
 
@@ -108,12 +109,20 @@ namespace RunAcross.Player
             _verticalVelocity += gravity * Time.deltaTime;
 
             float speed = InputEnabled && _sprint != null && _sprint.IsPressed() ? sprintSpeed : walkSpeed;
-            _controller.Move((direction * speed + Vector3.up * _verticalVelocity) * Time.deltaTime);
+            // ride moving platforms: they move first (execution order), we follow by their delta
+            Vector3 carry = _ground ? _ground.Delta : Vector3.zero;
+            _ground = null; // re-set by OnControllerColliderHit while we're still standing on it
+            _controller.Move((direction * speed + Vector3.up * _verticalVelocity) * Time.deltaTime + carry);
 
             if (transform.position.y < respawnBelowY) Respawn();
         }
 
-        public void Respawn() => Teleport(_checkpointPosition, _checkpointRotation, true);
+        void OnControllerColliderHit(ControllerColliderHit hit)
+        {
+            if (hit.normal.y > 0.6f) _ground = hit.collider.GetComponentInParent<Gameplay.MovingPlatform>();
+        }
+
+        public void Respawn() =>Teleport(_checkpointPosition, _checkpointRotation, true);
 
         public void Teleport(Vector3 position, Quaternion rotation, bool announce = false)
         {
@@ -122,6 +131,7 @@ namespace RunAcross.Player
             _controller.enabled = true;
             _verticalVelocity = 0f;
             _faceOverride = null;
+            _ground = null;
             if (announce)
             {
                 GameAudio.Play(Sfx.Respawn, 0.7f);

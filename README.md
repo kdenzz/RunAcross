@@ -1,18 +1,19 @@
 # Run Across
 
-A neon platformer-puzzler built in Unity 6 (URP). This repo is the rebuild. The in-game graphics match the style of the original Blender render, and the first playable level is in.
+A neon platformer-puzzler built in Unity 6 (URP). This repo is the rebuild. The in-game graphics match the style of the original Blender render, and two playable levels are in.
 
 | Target (Blender render) | Main menu (the same shot, live) |
 |---|---|
 | ![](Docs/reference_target.jpg) | ![](Docs/menu.png) |
 
-| Shoot targets to drop the laser gates | The bridge rises out of the fog |
-|---|---|
-| ![](Docs/play_gate.png) | ![](Docs/play_bridge.png) |
+| Shoot targets to drop the laser gates | The bridge rises out of the fog | Level 02: drifting targets, moving platforms |
+|---|---|---|
+| ![](Docs/play_gate.png) | ![](Docs/play_bridge.png) | ![](Docs/play_level02.png) |
 
 ## The game so far
 
-- **Main menu** on the hero shot from the Blender render. Only the mouse is active. **Play** blends the camera down to the courier and hands over control. **Settings**, **Controls** and **Exit** sit next to it.
+- **Main menu** on the hero shot from the Blender render. Only the mouse is active. **Play** opens the level select; picking a level blends the camera down to the courier and hands over control. **Settings**, **Controls** and **Exit** sit next to it.
+- **Level select**: each level shows its best time. Level 02 unlocks when you finish Level 01, and the finish screen offers **Next level**.
 - **Settings**, saved between sessions:
   - Graphics: **Low / Medium / High**.
   - Volume: **Master / Music / Effects**.
@@ -25,7 +26,12 @@ A neon platformer-puzzler built in Unity 6 (URP). This repo is the rebuild. The 
   4. A second gate's targets hang out beyond the lasers, so you shoot through them.
   5. Stepping pads lead to the goal ring, which has a light beacon visible from the start.
   6. Falling sends you back to the last checkpoint.
-- **HUD**: objective with a target count, a run timer, a crosshair and toasts. The finish screen shows your time and your best time.
+- **Level 02 "The Drift"** runs east from the same island:
+  1. A **timed** gate: hit all three island targets within 8 seconds of the first, or they reset.
+  2. A **ferry** shuttles across a wide gap, then a **lift** rises to the high deck.
+  3. The second gate's targets **drift on rails**, so you have to lead your shots.
+  4. A **sideways shuttle** carries you over to the offset goal line.
+- **HUD**: objective with a target count (and a countdown for timed targets), a run timer, a crosshair and toasts. The finish screen shows your time and your best time.
 
 ### Graphics presets
 
@@ -61,12 +67,13 @@ RunAcross/                 Unity 6000.6.5f1 project (URP)
   Assets/_Project/
     Art/                   models, textures, materials (generated)
     Audio/                 music_neon_loop.wav, sfx_*.wav (generated, replaceable)
-    Editor/LevelBuilder.cs     rebuilds Level_01; all look values live here
-    Editor/CourseBuilder.cs    the course layout: platforms, targets, gates, bridge, goal
+    Editor/LevelBuilder.cs     rebuilds every level scene; all look values live here
+    Editor/CourseBuilder.cs    each level's course: platforms, movers, targets, gates, bridge, goal
     Editor/QualityPresets.cs   Low / Medium / High quality levels + URP assets
-    Scenes/Level_01.unity
-    Scripts/Core/          GameFlow (menu/play/pause/complete), GameSettings, GraphicsApplier
-    Scripts/Gameplay/      ShootTarget, PathOpener, Checkpoint, GoalZone
+    Scenes/Level_01.unity      also hosts the main menu
+    Scenes/Level_02.unity
+    Scripts/Core/          GameFlow (menu/play/pause/complete), Levels, GameSettings, GraphicsApplier
+    Scripts/Gameplay/      ShootTarget, PathOpener (incl. timed), MovingPlatform, Checkpoint, GoalZone
     Scripts/Player/        PlayerMotor, PlayerShooter
     Scripts/Audio/         GameAudio (master / music / fx)
     Scripts/UI/GameUI.cs + UI/GameUI.uxml, GameUI.uss   (UI Toolkit)
@@ -83,7 +90,7 @@ RunAcross/                 Unity 6000.6.5f1 project (URP)
    ```
    This step also bakes the floor's procedural bump into a normal map and a smoothness map, and packs the glTF metal/roughness maps into Unity's MetallicSmoothness format.
 3. Optional: regenerate the audio with `python3 Tools/gen_audio.py`. To use a real track or effect, drop in a WAV with the same file name.
-4. In Unity, run **RunAcross > Build Level 01**. It rebuilds the materials, the quality presets, the scene, the course, the UI and the audio wiring.
+4. In Unity, run **RunAcross > Build All Levels** (or Build Level 01 / 02). It rebuilds the materials, the quality presets, each level scene with its course, the UI and the audio wiring, and the scene list for builds.
 
 ## How the look is made
 

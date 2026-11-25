@@ -56,11 +56,5 @@ namespace RunAcross.Core
             PlayerPrefs.Save();
             Changed?.Invoke();
         }
-
-        public static float BestTime
-        {
-            get => PlayerPrefs.GetFloat("ra.best.level01", 0f);
-            set { PlayerPrefs.SetFloat("ra.best.level01", value); PlayerPrefs.Save(); }
-        }
     }
 }

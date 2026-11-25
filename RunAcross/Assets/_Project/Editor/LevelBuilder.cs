@@ -24,8 +24,6 @@ namespace RunAcross.EditorTools
     public static class LevelBuilder
     {
         const string Root = "Assets/_Project";
-        const string SceneName = "Level_01";
-        const string ScenePath = Root + "/Scenes/" + SceneName + ".unity";
         const string MatDir = Root + "/Art/Materials";
         const string TexDir = Root + "/Art/Textures";
         const string EnvFbx = Root + "/Art/Models/Environment.fbx";
@@ -40,9 +38,25 @@ namespace RunAcross.EditorTools
         static readonly Color NeonBlue = new Color(0.05f, 0.45f, 1f);
         static readonly Color Red = new Color(1f, 0.06f, 0.02f);
 
-        [MenuItem("RunAcross/Build Level 01")]
-        public static void Build()
+        static string ScenePathFor(int level) => Root + "/Scenes/" + Levels.All[level].scene + ".unity";
+
+        /// <summary>Rebuilds every level scene (each one hosts the same island, menu and player).</summary>
+        [MenuItem("RunAcross/Build All Levels")]
+        public static void BuildAll()
         {
+            for (int i = 0; i < Levels.Count; i++) Build(i);
+            var scenes = new EditorBuildSettingsScene[Levels.Count];
+            for (int i = 0; i < Levels.Count; i++) scenes[i] = new EditorBuildSettingsScene(ScenePathFor(i), true);
+            EditorBuildSettings.scenes = scenes; // Level_01 first: it hosts the main menu
+            EditorSceneManager.OpenScene(ScenePathFor(0));
+        }
+
+        [MenuItem("RunAcross/Build Level 01")] static void Build01() => Build(0);
+        [MenuItem("RunAcross/Build Level 02")] static void Build02() => Build(1);
+
+        public static void Build(int level)
+        {
+            string ScenePath = ScenePathFor(level);
             ConfigureTextures();
             var mats = BuildMaterials();
             ConfigureModels(mats);
@@ -65,10 +79,10 @@ namespace RunAcross.EditorTools
             LookLights(Find("Sun_Blue"), Find("Light_Red"), Find("NeonBar"), Find("Arch_Large"), mats["Window"]);
             var volume = LookVolume();
 
-            var course = CourseBuilder.Build(env.transform, mats);
+            var course = CourseBuilder.Build(level, env.transform, mats);
             var player = BuildPlayer(Find("PlayerSpawn"), mats);
             var cams = BuildCameras(Find("LookDevCamera"), player);
-            BuildSystems(cams, player, course, volume, water.GetComponent<PlanarReflection>());
+            BuildSystems(cams, player, course, volume, water.GetComponent<PlanarReflection>()).levelIndex = level;
 
             var probeGo = new GameObject("ReflectionProbe");
             probeGo.transform.position = new Vector3(0f, 1.5f, 0f);
@@ -82,7 +96,7 @@ namespace RunAcross.EditorTools
             EditorSceneManager.SaveScene(scene, ScenePath);
 
             // Bake only the reflection probe; there are no lightmaps (all lights are realtime).
-            string probeTex = Root + "/Scenes/" + SceneName + "/ReflectionProbe-0.exr";
+            string probeTex = Root + "/Scenes/" + Levels.All[level].scene + "/ReflectionProbe-0.exr";
             Directory.CreateDirectory(Path.GetDirectoryName(probeTex));
             Lightmapping.BakeReflectionProbe(probe, probeTex);
             AssetDatabase.ImportAsset(probeTex);
@@ -91,7 +105,6 @@ namespace RunAcross.EditorTools
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, ScenePath);
 
-            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
             Debug.Log("[RunAcross] Level built: " + ScenePath);
         }
 
@@ -469,7 +482,7 @@ namespace RunAcross.EditorTools
             composer.TargetOffset = new Vector3(0f, 0.6f, 0f); // aim above the head so the crosshair clears the courier
             follow.gameObject.AddComponent<CinemachineInputAxisController>();
             var deocc = follow.gameObject.AddComponent<CinemachineDeoccluder>();
-            deocc.CollideAgainst = 1; // Default layer only: invisible walls, gates and the player are on Ignore Raycast
+            deocc.CollideAgainst = 1; // Default layer only: walls, gates and the player are on Ignore Raycast, targets on Target
             deocc.IgnoreTag = "Player";
 
             player.GetComponent<PlayerMotor>().cameraTransform = main.transform;
@@ -482,7 +495,7 @@ namespace RunAcross.EditorTools
         const string UiDir = Root + "/UI";
         const string AudioDir = Root + "/Audio";
 
-        static void BuildSystems(Cams cams, GameObject player, CourseBuilder.Result course, Volume volume, PlanarReflection reflection)
+        static GameFlow BuildSystems(Cams cams, GameObject player, CourseBuilder.Result course, Volume volume, PlanarReflection reflection)
         {
             var systems = new GameObject("GameSystems");
 
@@ -517,6 +530,7 @@ namespace RunAcross.EditorTools
             flow.graphics = graphics;
             flow.path = course.path;
             ui.flow = flow;
+            return flow;
         }
 
         static AudioClip Clip(string file, bool streaming = false)

@@ -291,6 +291,25 @@
     font-size: 19px;
 }
 
+/* level select */
+.level-button {
+    height: 72px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.level-button:disabled {
+    opacity: 0.4;
+}
+
+.level-best {
+    font-size: 18px;
+    letter-spacing: 3px;
+    color: var(--cyan);
+    -unity-font-style: normal;
+}
+
 /* complete */
 .big-time {
     font-size: 72px;

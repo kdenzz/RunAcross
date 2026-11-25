@@ -36,7 +36,7 @@
                 </ui:VisualElement>
                 <ui:Label name="best-time" text="" class="best-time" />
             </ui:VisualElement>
-            <ui:Label text="v0.2  ·  Level 01 — The Arches" class="version" />
+            <ui:Label text="v0.3  ·  2 levels" class="version" />
         </ui:VisualElement>
 
         <!-- ============ PAUSE ============ -->
@@ -52,13 +52,24 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
+        <!-- ============ LEVEL SELECT ============ -->
+        <ui:VisualElement name="levels" class="screen overlay">
+            <ui:VisualElement class="panel panel--wide">
+                <ui:Label text="SELECT LEVEL" class="heading" />
+                <ui:VisualElement name="level-list" />
+                <ui:Button name="btn-levels-back" text="BACK" class="menu-button back-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
         <!-- ============ COMPLETE ============ -->
         <ui:VisualElement name="complete" class="screen overlay">
             <ui:VisualElement class="panel">
                 <ui:Label text="COURSE COMPLETE" class="heading heading--accent" />
+                <ui:Label name="complete-level" text="LEVEL 01" class="best-line" />
                 <ui:Label name="complete-time" text="00:00.00" class="big-time" />
                 <ui:Label name="complete-best" text="BEST 00:00.00" class="best-line" />
-                <ui:Button name="btn-again" text="RUN AGAIN" class="menu-button menu-button--primary" />
+                <ui:Button name="btn-next" text="NEXT LEVEL" class="menu-button menu-button--primary" />
+                <ui:Button name="btn-again" text="RUN AGAIN" class="menu-button" />
                 <ui:Button name="btn-complete-menu" text="MAIN MENU" class="menu-button" />
             </ui:VisualElement>
         </ui:VisualElement>
@@ -102,7 +113,7 @@
                     <ui:VisualElement class="key-row"><ui:Label text="SHIFT" class="key" /><ui:Label text="Sprint (jump further)" class="key-desc" /></ui:VisualElement>
                     <ui:VisualElement class="key-row"><ui:Label text="ESC" class="key" /><ui:Label text="Pause" class="key-desc" /></ui:VisualElement>
                 </ui:VisualElement>
-                <ui:Label text="Orange targets open the way. Shoot every target linked to a gate or bridge, then run across before the fog swallows you. Fall and you restart at the last checkpoint." class="note note--body" />
+                <ui:Label text="Orange targets open the way: shoot every target linked to a gate or bridge. Timed targets reset if you're too slow, and some drift on rails. Moving platforms carry you. Fall and you restart at the last checkpoint." class="note note--body" />
                 <ui:Button name="btn-controls-back" text="BACK" class="menu-button back-button" />
             </ui:VisualElement>
         </ui:VisualElement>
