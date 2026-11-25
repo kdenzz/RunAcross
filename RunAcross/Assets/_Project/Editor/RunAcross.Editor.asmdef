@@ -1,0 +1,7 @@
+{
+    "name": "RunAcross.Editor",
+    "rootNamespace": "RunAcross.EditorTools",
+    "references": ["RunAcross", "Unity.InputSystem", "Unity.Cinemachine", "Unity.RenderPipelines.Universal.Runtime", "Unity.RenderPipelines.Universal.Editor", "Unity.RenderPipelines.Core.Runtime"],
+    "includePlatforms": ["Editor"],
+    "autoReferenced": false
+}

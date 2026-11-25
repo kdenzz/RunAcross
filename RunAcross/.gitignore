@@ -1,0 +1,21 @@
+
+# Ignore Unity cache folders everywhere
+**/[Ll]ibrary/
+**/[Tt]emp/
+**/[Oo]bj/
+**/[Bb]uild/
+**/[Bb]uilds/
+**/[Ll]ogs/
+**/[Uu]ser[Ss]ettings/
+**/[Mm]emoryCaptures/
+**/.vs/
+**/.idea/
+*.slnx
+/Screenshots/
+
+# IDE / generated
+*.csproj
+*.sln
+*.slnx
+.vscode/
+.idea/

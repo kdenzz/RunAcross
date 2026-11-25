@@ -1,0 +1,6 @@
+{
+    "name": "RunAcross",
+    "rootNamespace": "RunAcross",
+    "references": ["Unity.InputSystem", "Unity.Cinemachine", "Unity.RenderPipelines.Universal.Runtime", "Unity.RenderPipelines.Core.Runtime"],
+    "autoReferenced": true
+}
