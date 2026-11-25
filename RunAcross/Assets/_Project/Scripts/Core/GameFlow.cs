@@ -35,10 +35,9 @@ namespace RunAcross.Core
         public float RunTime { get; private set; }
 
         static bool _skipMenuOnLoad;
-        CinemachineInputAxisController _look;
+        Player.PlayerLook _look;
         CinemachineOrbitalFollow _orbit;
         float _startDelay;
-        float[] _baseGains;
         PathOpener _timed;
 
         void OnCheckpoint(Checkpoint _) => ui.Toast("Checkpoint");
@@ -47,7 +46,7 @@ namespace RunAcross.Core
         {
             Instance = this;
             GameSettings.Load();
-            _look = playerCamera.GetComponent<CinemachineInputAxisController>();
+            _look = playerCamera.GetComponent<Player.PlayerLook>();
             _orbit = playerCamera.GetComponent<CinemachineOrbitalFollow>();
             if (brain) brain.DefaultBlend = new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.EaseInOut, blendSeconds);
             foreach (var p in path)
@@ -59,12 +58,10 @@ namespace RunAcross.Core
             Checkpoint.Reached += OnCheckpoint;
             GoalZone.Reached += Complete;
             player.Respawned += () => ui.Toast("Respawned at checkpoint");
-            GameSettings.Changed += ApplyLookSettings;
         }
 
         void OnDestroy()
         {
-            GameSettings.Changed -= ApplyLookSettings;
             Checkpoint.Reached -= OnCheckpoint; // static events outlive the scene
             GoalZone.Reached -= Complete;
             if (Instance == this) Instance = null;
@@ -72,7 +69,6 @@ namespace RunAcross.Core
 
         void Start()
         {
-            ApplyLookSettings();
             if (_skipMenuOnLoad) { _skipMenuOnLoad = false; ShowMenu(); StartRun(instant: true); }
             else ShowMenu();
         }
@@ -243,25 +239,6 @@ namespace RunAcross.Core
                 return;
             }
             ui.SetObjective("Reach the beacon at the end of the course", 0, 0);
-        }
-
-        void ApplyLookSettings()
-        {
-            if (_look == null) return;
-            var controllers = _look.Controllers;
-            if (_baseGains == null)
-            {
-                _baseGains = new float[controllers.Count];
-                for (int i = 0; i < controllers.Count; i++) _baseGains[i] = controllers[i].Input.Gain;
-            }
-            for (int i = 0; i < controllers.Count && i < _baseGains.Length; i++)
-            {
-                var c = controllers[i];
-                float gain = _baseGains[i];
-                if (c.Name.Contains("Orbit X")) gain *= GameSettings.MouseSensitivity;
-                else if (c.Name.Contains("Orbit Y")) gain *= GameSettings.MouseSensitivity * (GameSettings.InvertY ? -1f : 1f);
-                c.Input.Gain = gain;
-            }
         }
     }
 }

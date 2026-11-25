@@ -480,7 +480,9 @@ namespace RunAcross.EditorTools
             orbit.TrackerSettings.BindingMode = Unity.Cinemachine.TargetTracking.BindingMode.WorldSpace;
             var composer = follow.gameObject.AddComponent<CinemachineRotationComposer>();
             composer.TargetOffset = new Vector3(0f, 0.6f, 0f); // aim above the head so the crosshair clears the courier
-            follow.gameObject.AddComponent<CinemachineInputAxisController>();
+            var look = follow.gameObject.AddComponent<PlayerLook>();
+            look.actions = player.GetComponent<PlayerMotor>().actions;
+            look.brain = brain;
             var deocc = follow.gameObject.AddComponent<CinemachineDeoccluder>();
             deocc.CollideAgainst = 1; // Default layer only: walls, gates and the player are on Ignore Raycast, targets on Target
             deocc.IgnoreTag = "Player";
