@@ -1,0 +1,111 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="GameUI.uss" />
+    <ui:VisualElement name="root" class="root" picking-mode="Ignore">
+
+        <!-- ============ HUD ============ -->
+        <ui:VisualElement name="hud" class="screen hud" picking-mode="Ignore">
+            <ui:VisualElement class="hud-top" picking-mode="Ignore">
+                <ui:VisualElement class="objective" picking-mode="Ignore">
+                    <ui:Label text="OBJECTIVE" class="hud-caption" picking-mode="Ignore" />
+                    <ui:Label name="objective-text" text="Shoot the targets" class="objective-text" picking-mode="Ignore" />
+                    <ui:Label name="objective-count" text="TARGETS 0 / 2" class="objective-count" picking-mode="Ignore" />
+                </ui:VisualElement>
+                <ui:VisualElement class="timer-box" picking-mode="Ignore">
+                    <ui:Label text="TIME" class="hud-caption hud-caption--right" picking-mode="Ignore" />
+                    <ui:Label name="timer" text="00:00.00" class="timer" picking-mode="Ignore" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement class="crosshair" picking-mode="Ignore">
+                <ui:VisualElement class="crosshair-dot" picking-mode="Ignore" />
+            </ui:VisualElement>
+            <ui:Label name="toast" text="" class="toast" picking-mode="Ignore" />
+            <ui:Label text="ESC  PAUSE" class="hud-hint" picking-mode="Ignore" />
+        </ui:VisualElement>
+
+        <!-- ============ MAIN MENU ============ -->
+        <ui:VisualElement name="main-menu" class="screen menu-screen">
+            <ui:VisualElement class="menu-column">
+                <ui:Label text="RUN" class="title" />
+                <ui:Label text="ACROSS" class="title title--accent" />
+                <ui:Label text="shoot the lights · open the path · reach the beacon" class="tagline" />
+                <ui:VisualElement class="menu-buttons">
+                    <ui:Button name="btn-play" text="PLAY" class="menu-button menu-button--primary" />
+                    <ui:Button name="btn-settings" text="SETTINGS" class="menu-button" />
+                    <ui:Button name="btn-controls" text="CONTROLS" class="menu-button" />
+                    <ui:Button name="btn-exit" text="EXIT" class="menu-button menu-button--quiet" />
+                </ui:VisualElement>
+                <ui:Label name="best-time" text="" class="best-time" />
+            </ui:VisualElement>
+            <ui:Label text="v0.2  ·  Level 01 — The Arches" class="version" />
+        </ui:VisualElement>
+
+        <!-- ============ PAUSE ============ -->
+        <ui:VisualElement name="pause" class="screen overlay">
+            <ui:VisualElement class="panel">
+                <ui:Label text="PAUSED" class="heading" />
+                <ui:Button name="btn-resume" text="RESUME" class="menu-button menu-button--primary" />
+                <ui:Button name="btn-restart" text="RESTART RUN" class="menu-button" />
+                <ui:Button name="btn-pause-settings" text="SETTINGS" class="menu-button" />
+                <ui:Button name="btn-pause-controls" text="CONTROLS" class="menu-button" />
+                <ui:Button name="btn-mainmenu" text="MAIN MENU" class="menu-button" />
+                <ui:Button name="btn-pause-exit" text="EXIT GAME" class="menu-button menu-button--quiet" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ============ COMPLETE ============ -->
+        <ui:VisualElement name="complete" class="screen overlay">
+            <ui:VisualElement class="panel">
+                <ui:Label text="COURSE COMPLETE" class="heading heading--accent" />
+                <ui:Label name="complete-time" text="00:00.00" class="big-time" />
+                <ui:Label name="complete-best" text="BEST 00:00.00" class="best-line" />
+                <ui:Button name="btn-again" text="RUN AGAIN" class="menu-button menu-button--primary" />
+                <ui:Button name="btn-complete-menu" text="MAIN MENU" class="menu-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ============ SETTINGS (shared by menu and pause) ============ -->
+        <ui:VisualElement name="settings" class="screen overlay">
+            <ui:VisualElement class="panel panel--wide">
+                <ui:Label text="SETTINGS" class="heading" />
+
+                <ui:Label text="GRAPHICS" class="section" />
+                <ui:VisualElement class="segmented">
+                    <ui:Button name="q-low" text="LOW" class="segment" />
+                    <ui:Button name="q-medium" text="MEDIUM" class="segment" />
+                    <ui:Button name="q-high" text="HIGH" class="segment" />
+                </ui:VisualElement>
+                <ui:Label name="quality-note" text="" class="note" />
+                <ui:Toggle name="fullscreen" label="Fullscreen" class="setting-toggle" />
+
+                <ui:Label text="AUDIO" class="section" />
+                <ui:Slider name="vol-master" label="Master" low-value="0" high-value="1" class="setting-slider" />
+                <ui:Slider name="vol-music" label="Music" low-value="0" high-value="1" class="setting-slider" />
+                <ui:Slider name="vol-fx" label="Effects" low-value="0" high-value="1" class="setting-slider" />
+
+                <ui:Label text="CONTROLS" class="section" />
+                <ui:Slider name="mouse-sens" label="Mouse sensitivity" low-value="0.2" high-value="3" class="setting-slider" />
+                <ui:Toggle name="invert-y" label="Invert camera Y" class="setting-toggle" />
+
+                <ui:Button name="btn-settings-back" text="BACK" class="menu-button back-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ============ CONTROLS ============ -->
+        <ui:VisualElement name="controls" class="screen overlay">
+            <ui:VisualElement class="panel panel--wide">
+                <ui:Label text="CONTROLS" class="heading" />
+                <ui:VisualElement class="keys">
+                    <ui:VisualElement class="key-row"><ui:Label text="WASD" class="key" /><ui:Label text="Move" class="key-desc" /></ui:VisualElement>
+                    <ui:VisualElement class="key-row"><ui:Label text="MOUSE" class="key" /><ui:Label text="Look / aim" class="key-desc" /></ui:VisualElement>
+                    <ui:VisualElement class="key-row"><ui:Label text="LEFT CLICK" class="key" /><ui:Label text="Shoot" class="key-desc" /></ui:VisualElement>
+                    <ui:VisualElement class="key-row"><ui:Label text="SPACE" class="key" /><ui:Label text="Jump" class="key-desc" /></ui:VisualElement>
+                    <ui:VisualElement class="key-row"><ui:Label text="SHIFT" class="key" /><ui:Label text="Sprint (jump further)" class="key-desc" /></ui:VisualElement>
+                    <ui:VisualElement class="key-row"><ui:Label text="ESC" class="key" /><ui:Label text="Pause" class="key-desc" /></ui:VisualElement>
+                </ui:VisualElement>
+                <ui:Label text="Orange targets open the way. Shoot every target linked to a gate or bridge, then run across before the fog swallows you. Fall and you restart at the last checkpoint." class="note note--body" />
+                <ui:Button name="btn-controls-back" text="BACK" class="menu-button back-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>
