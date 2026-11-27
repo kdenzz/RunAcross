@@ -29,16 +29,24 @@ namespace RunAcross.Core
         [Tooltip("In course order; the first one still closed sets the HUD objective.")]
         public PathOpener[] path;
         public float blendSeconds = 1.6f;
+        [Tooltip("3-2-1-GO before control after a restart or a direct level load.")]
+        public int countdownFrom = 3;
 
         public static GameFlow Instance { get; private set; }
         public GameState State { get; private set; }
         public float RunTime { get; private set; }
 
         static bool _skipMenuOnLoad;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() => _skipMenuOnLoad = false;
         Player.PlayerLook _look;
         CinemachineOrbitalFollow _orbit;
         float _startDelay;
         PathOpener _timed;
+        bool _countingDown;
+        int _countShown;
+        InputAction _restart;
 
         void OnCheckpoint(Checkpoint _) => ui.Toast("Checkpoint");
 
@@ -46,6 +54,8 @@ namespace RunAcross.Core
         {
             Instance = this;
             GameSettings.Load();
+            KeyBindings.Init(player.actions);
+            _restart = player.actions.FindAction("Game/Restart", true);
             _look = playerCamera.GetComponent<Player.PlayerLook>();
             _orbit = playerCamera.GetComponent<CinemachineOrbitalFollow>();
             if (brain) brain.DefaultBlend = new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.EaseInOut, blendSeconds);
@@ -67,22 +77,44 @@ namespace RunAcross.Core
             if (Instance == this) Instance = null;
         }
 
+        void OnEnable() => _restart?.Enable();
+        void OnDisable() { KeyBindings.Cancel(); _restart?.Disable(); }
+
         void Start()
         {
+            _ = Online.OnlineBoards.EnsureReady(); // sign in while the menu is up; fails soft when offline
             if (_skipMenuOnLoad) { _skipMenuOnLoad = false; ShowMenu(); StartRun(instant: true); }
             else ShowMenu();
         }
 
         void Update()
         {
+            if (KeyBindings.Busy) return; // the key that ends a rebind (Esc to cancel) mustn't also close the panel
             var kb = Keyboard.current;
             bool back = (kb != null && kb.escapeKey.wasPressedThisFrame) ||
                         (Gamepad.current != null && Gamepad.current.startButton.wasPressedThisFrame);
+            bool restart = _restart.WasPressedThisFrame();
+            // Restart (R / Select by default, rebindable) works while playing or on the finish screen, not while typing a callsign
+            if (restart && (State == GameState.Playing || State == GameState.Complete) && !ui.IsTyping)
+            {
+                Restart();
+                return;
+            }
 
             switch (State)
             {
                 case GameState.Starting:
                     _startDelay -= Time.unscaledDeltaTime;
+                    if (_countingDown)
+                    {
+                        int n = Mathf.CeilToInt(_startDelay);
+                        if (n > 0 && n != _countShown)
+                        {
+                            _countShown = n;
+                            ui.ShowCountdown(n.ToString());
+                            Audio.GameAudio.Play(Audio.Sfx.UiClick);
+                        }
+                    }
                     if (_startDelay <= 0f) BeginControl();
                     break;
                 case GameState.Playing:
@@ -135,8 +167,12 @@ namespace RunAcross.Core
             ui.SetTimer(0f);
             RefreshObjective();
             State = GameState.Starting;
-            _startDelay = instant ? 0f : blendSeconds * 0.85f;
+            // a restart (or a direct level load) counts down 3-2-1-GO with the courier frozen in place
+            _countingDown = instant && countdownFrom > 0;
+            _countShown = -1;
+            _startDelay = _countingDown ? countdownFrom : instant ? 0f : blendSeconds * 0.85f;
             if (instant && brain) brain.ResetState();
+            if (_countingDown) { Cursor.lockState = CursorLockMode.Locked; Cursor.visible = false; }
         }
 
         void BeginControl()
@@ -144,6 +180,12 @@ namespace RunAcross.Core
             State = GameState.Playing;
             SetControl(true);
             ui.Toast(Levels.Label(levelIndex));
+            if (_countingDown)
+            {
+                _countingDown = false;
+                ui.ShowCountdown("GO");
+                Audio.GameAudio.Play(Audio.Sfx.Checkpoint);
+            }
         }
 
         public void Pause()
@@ -182,6 +224,7 @@ namespace RunAcross.Core
             if (hasNext) Levels.Unlock(levelIndex + 1);
             Audio.GameAudio.Play(Audio.Sfx.Complete);
             ui.ShowComplete(Levels.Label(levelIndex), RunTime, record ? RunTime : best, record, hasNext);
+            ui.ShowOnlineResult(levelIndex, RunTime);
         }
 
         public void Restart() => Reload();

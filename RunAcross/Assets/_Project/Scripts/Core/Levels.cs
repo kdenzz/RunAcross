@@ -7,14 +7,15 @@ namespace RunAcross.Core
     {
         public struct Info
         {
-            public string scene, title;
-            public Info(string scene, string title) { this.scene = scene; this.title = title; }
+            /// <summary>boardId is the UGS leaderboard id (the name of its Services/*.lb file).</summary>
+            public string scene, title, boardId;
+            public Info(string scene, string title, string boardId) { this.scene = scene; this.title = title; this.boardId = boardId; }
         }
 
         public static readonly Info[] All =
         {
-            new Info("Level_01", "The Arches"),
-            new Info("Level_02", "The Drift"),
+            new Info("Level_01", "The Arches", "level_01"),
+            new Info("Level_02", "The Drift", "level_02"),
         };
 
         public static int Count => All.Length;

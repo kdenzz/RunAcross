@@ -1,6 +1,6 @@
 {
     "name": "RunAcross",
     "rootNamespace": "RunAcross",
-    "references": ["Unity.InputSystem", "Unity.Cinemachine", "Unity.RenderPipelines.Universal.Runtime", "Unity.RenderPipelines.Core.Runtime"],
+    "references": ["Unity.InputSystem", "Unity.Cinemachine", "Unity.RenderPipelines.Universal.Runtime", "Unity.RenderPipelines.Core.Runtime", "Unity.Services.Core", "Unity.Services.Authentication", "Unity.Services.Leaderboards"],
     "autoReferenced": true
 }

@@ -19,7 +19,8 @@
                 <ui:VisualElement class="crosshair-dot" picking-mode="Ignore" />
             </ui:VisualElement>
             <ui:Label name="toast" text="" class="toast" picking-mode="Ignore" />
-            <ui:Label text="ESC  PAUSE" class="hud-hint" picking-mode="Ignore" />
+            <ui:Label name="countdown" text="" class="countdown" picking-mode="Ignore" />
+            <ui:Label name="hud-hint" text="ESC  PAUSE   ·   R  RESTART" class="hud-hint" picking-mode="Ignore" />
         </ui:VisualElement>
 
         <!-- ============ MAIN MENU ============ -->
@@ -30,13 +31,14 @@
                 <ui:Label text="shoot the lights · open the path · reach the beacon" class="tagline" />
                 <ui:VisualElement class="menu-buttons">
                     <ui:Button name="btn-play" text="PLAY" class="menu-button menu-button--primary" />
+                    <ui:Button name="btn-boards" text="LEADERBOARDS" class="menu-button" />
                     <ui:Button name="btn-settings" text="SETTINGS" class="menu-button" />
                     <ui:Button name="btn-controls" text="CONTROLS" class="menu-button" />
                     <ui:Button name="btn-exit" text="EXIT" class="menu-button menu-button--quiet" />
                 </ui:VisualElement>
                 <ui:Label name="best-time" text="" class="best-time" />
             </ui:VisualElement>
-            <ui:Label text="v0.3  ·  2 levels" class="version" />
+            <ui:Label text="v0.4  ·  2 levels" class="version" />
         </ui:VisualElement>
 
         <!-- ============ PAUSE ============ -->
@@ -68,9 +70,37 @@
                 <ui:Label name="complete-level" text="LEVEL 01" class="best-line" />
                 <ui:Label name="complete-time" text="00:00.00" class="big-time" />
                 <ui:Label name="complete-best" text="BEST 00:00.00" class="best-line" />
+                <ui:VisualElement name="complete-board" class="mini-board">
+                    <ui:Label name="complete-rank" text="" class="board-status" />
+                    <ui:VisualElement name="complete-rows" />
+                </ui:VisualElement>
                 <ui:Button name="btn-next" text="NEXT LEVEL" class="menu-button menu-button--primary" />
-                <ui:Button name="btn-again" text="RUN AGAIN" class="menu-button" />
+                <ui:Button name="btn-again" text="RUN AGAIN  ·  R" class="menu-button" />
                 <ui:Button name="btn-complete-menu" text="MAIN MENU" class="menu-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ============ LEADERBOARDS ============ -->
+        <ui:VisualElement name="boards" class="screen overlay">
+            <ui:VisualElement class="panel panel--wide">
+                <ui:Label text="LEADERBOARDS" class="heading" />
+                <ui:VisualElement name="board-tabs" class="segmented" />
+                <ui:Label name="board-status" text="" class="board-status" />
+                <ui:VisualElement name="board-rows" class="board-rows" />
+                <ui:Label name="board-me" text="" class="board-me" />
+                <ui:Button name="btn-boards-back" text="BACK" class="menu-button back-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- ============ CALLSIGN PROMPT ============ -->
+        <ui:VisualElement name="name-prompt" class="screen overlay">
+            <ui:VisualElement class="panel">
+                <ui:Label text="CHOOSE A CALLSIGN" class="heading heading--accent" />
+                <ui:Label text="Shown next to your times on the online leaderboards. You can change it later in Settings." class="note note--body" />
+                <ui:TextField name="name-field" max-length="16" class="name-field" />
+                <ui:Label name="name-error" text="" class="name-error" />
+                <ui:Button name="btn-name-submit" text="SUBMIT TIME" class="menu-button menu-button--primary" />
+                <ui:Button name="btn-name-skip" text="NOT NOW" class="menu-button menu-button--quiet" />
             </ui:VisualElement>
         </ui:VisualElement>
 
@@ -97,6 +127,13 @@
                 <ui:Slider name="mouse-sens" label="Mouse sensitivity" low-value="0.2" high-value="3" class="setting-slider" />
                 <ui:Toggle name="invert-y" label="Invert camera Y" class="setting-toggle" />
 
+                <ui:Label text="ONLINE" class="section" />
+                <ui:VisualElement class="name-row">
+                    <ui:TextField name="settings-name" label="Callsign" max-length="16" class="name-field name-field--inline" />
+                    <ui:Button name="btn-settings-name" text="SAVE" class="segment name-save" />
+                </ui:VisualElement>
+                <ui:Label name="settings-name-note" text="" class="note" />
+
                 <ui:Button name="btn-settings-back" text="BACK" class="menu-button back-button" />
             </ui:VisualElement>
         </ui:VisualElement>
@@ -105,15 +142,24 @@
         <ui:VisualElement name="controls" class="screen overlay">
             <ui:VisualElement class="panel panel--wide">
                 <ui:Label text="CONTROLS" class="heading" />
-                <ui:VisualElement class="keys">
-                    <ui:VisualElement class="key-row"><ui:Label text="WASD" class="key" /><ui:Label text="Move" class="key-desc" /></ui:VisualElement>
-                    <ui:VisualElement class="key-row"><ui:Label text="MOUSE" class="key" /><ui:Label text="Look / aim" class="key-desc" /></ui:VisualElement>
-                    <ui:VisualElement class="key-row"><ui:Label text="LEFT CLICK" class="key" /><ui:Label text="Shoot" class="key-desc" /></ui:VisualElement>
-                    <ui:VisualElement class="key-row"><ui:Label text="SPACE" class="key" /><ui:Label text="Jump" class="key-desc" /></ui:VisualElement>
-                    <ui:VisualElement class="key-row"><ui:Label text="SHIFT" class="key" /><ui:Label text="Sprint (jump further)" class="key-desc" /></ui:VisualElement>
-                    <ui:VisualElement class="key-row"><ui:Label text="ESC" class="key" /><ui:Label text="Pause" class="key-desc" /></ui:VisualElement>
+                <ui:VisualElement class="bind-row bind-row--head">
+                    <ui:Label text="ACTION" class="bind-label section" />
+                    <ui:Label text="PRIMARY" class="bind-col section" />
+                    <ui:Label text="SECONDARY" class="bind-col section" />
                 </ui:VisualElement>
-                <ui:Label text="Orange targets open the way: shoot every target linked to a gate or bridge. Timed targets reset if you're too slow, and some drift on rails. Moving platforms carry you. Fall and you restart at the last checkpoint." class="note note--body" />
+                <ui:VisualElement name="bind-list" />
+                <ui:VisualElement class="bind-row">
+                    <ui:Label text="Look / aim" class="bind-label" />
+                    <ui:Label text="MOUSE" class="bind-fixed" />
+                </ui:VisualElement>
+                <ui:VisualElement class="bind-row">
+                    <ui:Label text="Pause" class="bind-label" />
+                    <ui:Label text="ESC" class="bind-fixed" />
+                </ui:VisualElement>
+                <ui:Label name="bind-status" text="" class="note bind-status" />
+                <ui:Label text="Click a slot, then press a key or mouse button. ESC cancels, BACKSPACE clears the slot. Gamepad controls are fixed." class="note" />
+                <ui:Label text="Orange targets open the way: shoot every target linked to a gate or bridge. Timed targets reset if you're too slow, and some drift on rails. Fall and you restart at the last checkpoint." class="note" />
+                <ui:Button name="btn-binds-reset" text="RESET TO DEFAULTS" class="menu-button menu-button--quiet" />
                 <ui:Button name="btn-controls-back" text="BACK" class="menu-button back-button" />
             </ui:VisualElement>
         </ui:VisualElement>
