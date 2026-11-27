@@ -31,6 +31,8 @@ namespace RunAcross.Core
         public float blendSeconds = 1.6f;
         [Tooltip("3-2-1-GO before control after a restart or a direct level load.")]
         public int countdownFrom = 3;
+        [Tooltip("Total length of the 3-2-1, in seconds; GO shows as it ends.")]
+        public float countdownSeconds = 1.5f;
 
         public static GameFlow Instance { get; private set; }
         public GameState State { get; private set; }
@@ -104,10 +106,10 @@ namespace RunAcross.Core
             switch (State)
             {
                 case GameState.Starting:
-                    _startDelay -= Time.unscaledDeltaTime;
+                    _startDelay -= Mathf.Min(Time.unscaledDeltaTime, 0.1f); // a scene-load hitch mustn't eat the countdown
                     if (_countingDown)
                     {
-                        int n = Mathf.CeilToInt(_startDelay);
+                        int n = Mathf.CeilToInt(_startDelay / countdownSeconds * countdownFrom);
                         if (n > 0 && n != _countShown)
                         {
                             _countShown = n;
@@ -168,9 +170,9 @@ namespace RunAcross.Core
             RefreshObjective();
             State = GameState.Starting;
             // a restart (or a direct level load) counts down 3-2-1-GO with the courier frozen in place
-            _countingDown = instant && countdownFrom > 0;
+            _countingDown = instant && countdownFrom > 0 && countdownSeconds > 0f;
             _countShown = -1;
-            _startDelay = _countingDown ? countdownFrom : instant ? 0f : blendSeconds * 0.85f;
+            _startDelay = _countingDown ? countdownSeconds : instant ? 0f : blendSeconds * 0.85f;
             if (instant && brain) brain.ResetState();
             if (_countingDown) { Cursor.lockState = CursorLockMode.Locked; Cursor.visible = false; }
         }

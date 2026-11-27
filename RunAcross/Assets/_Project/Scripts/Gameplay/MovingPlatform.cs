@@ -1,3 +1,4 @@
+using RunAcross.Core;
 using UnityEngine;
 
 namespace RunAcross.Gameplay
@@ -5,6 +6,7 @@ namespace RunAcross.Gameplay
     /// <summary>
     /// Eases back and forth along <see cref="travel"/> (slow at both ends, so they're easy to board).
     /// Runs before the player, which reads <see cref="Delta"/> to ride along.
+    /// Holds still on the menu and through the start countdown, so every run starts from the same layout.
     /// </summary>
     [DefaultExecutionOrder(-100)]
     public class MovingPlatform : MonoBehaviour
@@ -28,6 +30,13 @@ namespace RunAcross.Gameplay
 
         void Update()
         {
+            var flow = GameFlow.Instance;
+            if (flow && (flow.State == GameState.Menu || flow.State == GameState.Starting))
+            {
+                Delta = Vector3.zero;
+                return;
+            }
+
             Vector3 before = transform.position;
             _time += Time.deltaTime;
             transform.localPosition = Evaluate(_time);
