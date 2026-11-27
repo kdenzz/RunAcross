@@ -5,3 +5,5 @@
 # Local player builds
 /RunAcross/*.app/
 /RunAcross/*_Win/
+/RunAcross/*_Win(*)/
+/RunAcross/*Winx64/
