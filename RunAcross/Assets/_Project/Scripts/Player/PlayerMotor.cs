@@ -27,6 +27,14 @@ namespace RunAcross.Player
         public float respawnBelowY = -8f;
 
         public event Action Respawned;
+        /// <summary>Raised the frame a jump launches.</summary>
+        public event Action Jumped;
+
+        /// <summary>Horizontal speed the courier is being driven at (m/s), excluding platform carry.</summary>
+        public float PlanarSpeed { get; private set; }
+        /// <summary>On the ground, with a short grace so CharacterController's flicker on steps doesn't register as a fall.</summary>
+        public bool IsGrounded => Time.time - _lastGroundedTime <= 0.1f;
+        public float VerticalVelocity => _verticalVelocity;
 
         public bool InputEnabled { get; private set; }
         public Vector3 CheckpointPosition => _checkpointPosition;
@@ -105,6 +113,7 @@ namespace RunAcross.Player
                 _lastJumpPressTime = -1f;
                 _lastGroundedTime = -1f;
                 GameAudio.PlayAt(Sfx.Jump, transform.position, 0.7f, 0.08f);
+                Jumped?.Invoke();
             }
             _verticalVelocity += gravity * Time.deltaTime;
 
@@ -112,6 +121,7 @@ namespace RunAcross.Player
             // ride moving platforms: they move first (execution order), we follow by their delta
             Vector3 carry = _ground ? _ground.Delta : Vector3.zero;
             _ground = null; // re-set by OnControllerColliderHit while we're still standing on it
+            PlanarSpeed = direction.magnitude * speed;
             _controller.Move((direction * speed + Vector3.up * _verticalVelocity) * Time.deltaTime + carry);
 
             if (transform.position.y < respawnBelowY) Respawn();
@@ -132,6 +142,7 @@ namespace RunAcross.Player
             _verticalVelocity = 0f;
             _faceOverride = null;
             _ground = null;
+            PlanarSpeed = 0f;
             if (announce)
             {
                 GameAudio.Play(Sfx.Respawn, 0.7f);

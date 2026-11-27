@@ -7,3 +7,8 @@
 /RunAcross/*_Win/
 /RunAcross/*_Win(*)/
 /RunAcross/*Winx64/
+
+# Unity Asset Store content (Standard EULA, no redistribution): import "Starter Assets - ThirdPerson",
+# only Runtime/ThirdPersonController/Character/Animations, from Package Manager > My Assets
+/RunAcross/Assets/Starter Assets/
+/RunAcross/Assets/Starter Assets.meta

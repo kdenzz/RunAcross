@@ -17,6 +17,10 @@ namespace RunAcross.Player
         public InputActionAsset actions;
         public Transform aimCamera;
         public Transform muzzle;
+        [Tooltip("The courier's right upper-arm bone. Tracers start at arm's length from it along the aim, " +
+                 "where PlayerAnimator's IK puts the hand. Falls back to the muzzle when unset.")]
+        public Transform aimShoulder;
+        public float armReach = 0.42f;
         public Material tracerMaterial;
         public Material sparkMaterial;
         public Color flashColor = new Color(0.1f, 0.7f, 1f);
@@ -26,6 +30,8 @@ namespace RunAcross.Player
         public float tracerLife = 0.09f;
 
         public event Action<ShootTarget> HitTarget;
+        /// <summary>Raised on every shot with the aim direction (PlayerAnimator raises the arm along it).</summary>
+        public event Action<Vector3> Fired;
 
         PlayerMotor _motor;
         InputAction _fire;
@@ -93,7 +99,9 @@ namespace RunAcross.Player
             }
 
             _motor.FaceTowards(dir);
-            Vector3 from = muzzle ? muzzle.position : transform.position + Vector3.up;
+            Fired?.Invoke(dir);
+            Vector3 from = aimShoulder ? aimShoulder.position + dir * armReach
+                : muzzle ? muzzle.position : transform.position + Vector3.up;
             var lr = _tracers[_nextTracer];
             _tracerEnd[_nextTracer] = Time.time + tracerLife;
             _nextTracer = (_nextTracer + 1) % _tracers.Length;

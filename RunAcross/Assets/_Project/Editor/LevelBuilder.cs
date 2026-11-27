@@ -245,6 +245,12 @@ namespace RunAcross.EditorTools
                 mi.importCameras = false;
                 mi.importLights = false;
                 mi.importAnimation = false;
+                if (path == CourierFbx)
+                {
+                    // rigged by Tools/rig_courier.py (T-pose rest, Mixamo bone names) -> Unity Humanoid
+                    mi.animationType = ModelImporterAnimationType.Human;
+                    mi.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+                }
                 mi.materialImportMode = ModelImporterMaterialImportMode.ImportStandard;
                 mi.materialLocation = ModelImporterMaterialLocation.InPrefab;
                 foreach (var kv in mats)
@@ -252,6 +258,7 @@ namespace RunAcross.EditorTools
                         mi.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), kv.Key), kv.Value);
                 mi.SaveAndReimport();
             }
+            CourierAnimatorBuilder.Build();
         }
 
         static void ConfigurePipeline()
@@ -416,8 +423,14 @@ namespace RunAcross.EditorTools
 
             var model = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(CourierFbx), player.transform);
             model.transform.localPosition = Vector3.zero;
-            model.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f); // FBX comes in lying along Z
+            model.transform.localRotation = Quaternion.identity; // the rigged FBX imports upright; Humanoid faces it along +Z
             foreach (var t in model.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = IgnoreRaycastLayer;
+            if (!model.TryGetComponent(out Animator animator)) animator = model.AddComponent<Animator>(); // Humanoid import usually adds one
+            animator.runtimeAnimatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(CourierAnimatorBuilder.ControllerPath);
+            animator.avatar = AssetDatabase.LoadAssetAtPath<Avatar>(CourierFbx);
+            animator.applyRootMotion = false;
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate; // the hero shot and the orbit camera always see it
+            model.AddComponent<PlayerAnimator>();
 
             var target = new GameObject("CameraTarget").transform;
             target.SetParent(player.transform, false);
@@ -430,9 +443,17 @@ namespace RunAcross.EditorTools
             var shooter = player.AddComponent<PlayerShooter>();
             shooter.actions = actions;
             shooter.muzzle = muzzle;
+            shooter.aimShoulder = FindDeep(model.transform, "RightArm"); // tracers start where the aimed hand is
             shooter.tracerMaterial = mats["TargetHit"];
             shooter.sparkMaterial = mats["TargetHit"];
             return player;
+        }
+
+        static Transform FindDeep(Transform root, string name)
+        {
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                if (t.name == name) return t;
+            return null;
         }
 
         struct Cams

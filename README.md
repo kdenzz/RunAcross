@@ -89,8 +89,11 @@ RunAcross/                 Unity 6000.6.5f1 project (URP)
    /Applications/Blender.app/Contents/MacOS/Blender -b Art/Source/SF.blend -P Tools/export_fbx.py
    ```
    This step also bakes the floor's procedural bump into a normal map and a smoothness map, and packs the glTF metal/roughness maps into Unity's MetallicSmoothness format.
-3. Optional: regenerate the audio with `python3 Tools/gen_audio.py`. To use a real track or effect, drop in a WAV with the same file name.
-4. In Unity, run **RunAcross > Build All Levels** (or Build Level 01 / 02). It rebuilds the materials, the quality presets, each level scene with its course, the UI and the audio wiring, and the scene list for builds.
+   It also rigs the courier for Unity Humanoid (`Tools/rig_courier.py`). That step builds a skeleton, attaches each robot part rigidly to a bone, and sets a T-pose as the rest pose.
+   To re-export only the courier (no floor bake), add `-- --courier-only`.
+3. **Animation clips (one-time, per clone):** the courier plays Unity's free **Starter Assets – ThirdPerson** clips. They're Asset Store content, so they aren't in this repo. In Unity, open Package Manager → My Assets → Starter Assets – ThirdPerson → Import. Click **None**, then tick only `Runtime/ThirdPersonController/Character/Animations`. Leave the rest unticked: it brings its own input setup and Cinemachine 2.
+4. Optional: regenerate the audio with `python3 Tools/gen_audio.py`. To use a real track or effect, drop in a WAV with the same file name.
+5. In Unity, run **RunAcross > Build All Levels** (or Build Level 01 / 02). It rebuilds the materials, the quality presets, each level scene with its course, the UI and the audio wiring, and the scene list for builds.
 
 ## How the look is made
 
